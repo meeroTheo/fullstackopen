@@ -88,15 +88,15 @@ const App = () => {
   };
 
   return (
-    <div>
+    <div className="container">
       <Header title="Phonebook" />
+      <Notification message={notif} />
       <SetFilter
         newFilter={newFilter}
         handleFilterChange={handleFilterChange}
         showAll={showAll}
         setShowAll={setShowAll}
       />
-      <Notification message={notif} />
       <Header title="add a new" />
       <PersonForm
         onSubmit={addPerson}
