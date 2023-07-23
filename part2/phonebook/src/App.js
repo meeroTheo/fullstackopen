@@ -40,8 +40,8 @@ const App = () => {
 
   const removePerson = (id, name) => {
     if (window.confirm(`Delete ${name} ?`)) {
-      personService.remove(id).then((response) => {
-        console.log(response.data);
+      personService.remove(id).then(() => {
+        setPersons(persons.filter(pers=> id !== pers.id))
       });
     }
   };
@@ -54,13 +54,15 @@ const App = () => {
     };
     //if a # is added to an existing user, new number replaces old
     if (persons.some((person) => person.name === newName)) {
+      const person = persons.find(pers => pers.name === newName);
       if (
         window.confirm(
           `${newName} is already added to phonebook, replace the old number with a new one?`
         )
       ) {
-        personService.update(personObject).then((response) => {
-          setPersons(persons.concat(response.data));
+        personService.update(person.id,personObject).then((response) => {
+          setPersons(persons.map(pers => pers.id !== response.id ? pers : response));
+          
           setNotif(`${newName} successfully changed`);
           setTimeout(() => {
             setNotif(null);
