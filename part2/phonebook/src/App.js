@@ -1,78 +1,98 @@
-import { useState, useEffect } from "react"
-import axios from 'axios'
-import People from './components/People'
-import SetFilter from './components/SetFilter'
-import PersonForm from './components/PersonForm'
-import Header from './components/Header'
+import { useState, useEffect } from "react";
+import People from "./components/People";
+import SetFilter from "./components/SetFilter";
+import PersonForm from "./components/PersonForm";
+import Header from "./components/Header";
+import Notification from "./components/Notification";
+import personService from "./services/persons";
+import "./index.css";
 
 const App = () => {
-  const [persons, setPersons] = useState([])
-  const [newName, setNewName] = useState("")
-  const [newNum, setNewNum] = useState("")
-  const [showAll, setShowAll] = useState("")
-  const [newFilter, setNewFilter] = useState("")
+  const [persons, setPersons] = useState([]);
+  const [newName, setNewName] = useState("");
+  const [newNum, setNewNum] = useState("");
+  const [showAll, setShowAll] = useState("");
+  const [newFilter, setNewFilter] = useState("");
+  const [notif, setNotif] = useState("");
 
-  useEffect(() => {
-    console.log('effect')
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        console.log('promise fulfilled')
-        setPersons(response.data)
-      })
-  }, [])
-  console.log('render', persons.length, 'persons')
-
+  const handlePersonChange = (event) => {
+    setNewName(event.target.value);
+  };
+  const handleNumberChange = (event) => {
+    setNewNum(event.target.value);
+  };
+  const handleFilterChange = (event) => {
+    setNewFilter(event.target.value);
+    setShowAll(showAll);
+  };
   const nameToShow = showAll
     ? persons
     : persons.filter((persons) =>
-        persons.name.toLowerCase().match(newFilter.toLowerCase())
-      )
+        persons.name?.toLowerCase().match(newFilter?.toLowerCase())
+      );
+
+  useEffect(() => {
+    personService.getAll().then((response) => {
+      setPersons(response.data);
+      //console.log(response.data);
+    });
+  }, []);
+
+  const removePerson = (id, name) => {
+    if (window.confirm(`Delete ${name} ?`)) {
+      personService.remove(id).then((response) => {
+        console.log(response.data);
+      });
+    }
+  };
 
   const addPerson = (event) => {
-    event.preventDefault() //prevents submitting form
-    if (newName.length === 0 || newNum.length === 0) {
-      alert("Must enter both name and number")
-    } else {
-      const personObject = {
-        name: newName,
-        number: newNum
+    event.preventDefault(); //prevents submitting form
+    const personObject = {
+      name: newName,
+      number: newNum,
+    };
+    //if a # is added to an existing user, new number replaces old
+    if (persons.some((person) => person.name === newName)) {
+      if (
+        window.confirm(
+          `${newName} is already added to phonebook, replace the old number with a new one?`
+        )
+      ) {
+        personService.update(personObject).then((response) => {
+          setPersons(persons.concat(response.data));
+          setNotif(`${newName} successfully changed`);
+          setTimeout(() => {
+            setNotif(null);
+          }, 5000);
+          setNewName("");
+          setNewNum("");
+        });
       }
-      setPersons(persons.concat(personObject))
-      setNewName("")
-      setNewNum("")
-    }
-  }
-  const handlePersonChange = (event) => {
-    const inputValue = event.target.value
-    if (persons.some((person) => person.name === inputValue)) {
-      alert(`${inputValue} is already added to the phonebook`)
     } else {
-      setNewName(inputValue)
+      personService.create(personObject).then((response) => {
+        setPersons(persons.concat(response.data));
+        setNotif(`Added ${newName}`);
+        setTimeout(() => {
+          setNotif(null);
+        }, 5000);
+        setNewName("");
+        setNewNum("");
+      });
     }
-  }
-  const handleNumberChange = (event) => {
-    setNewNum(event.target.value)
-  }
-  const handleFilterChange = (event) => {
-    const newFilter = event.target.value
-    setNewFilter(newFilter)
-    setShowAll(showAll)
-  }
+  };
 
   return (
     <div>
       <Header title="Phonebook" />
-
       <SetFilter
         newFilter={newFilter}
         handleFilterChange={handleFilterChange}
         showAll={showAll}
         setShowAll={setShowAll}
       />
-
+      <Notification message={notif} />
       <Header title="add a new" />
-
       <PersonForm
         onSubmit={addPerson}
         newName={newName}
@@ -80,13 +100,10 @@ const App = () => {
         newNum={newNum}
         handleNumberChange={handleNumberChange}
       />
-
       <Header title="Numbers" />
-
-      <People persons={nameToShow} />
+      <People persons={nameToShow} removePerson={removePerson} />
     </div>
-  )
-}
+  );
+};
 
-export default App
-
+export default App;
