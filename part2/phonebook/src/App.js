@@ -48,10 +48,7 @@ const App = () => {
 
   const addPerson = (event) => {
     event.preventDefault(); //prevents submitting form
-    const personObject = {
-      name: newName,
-      number: newNum,
-    };
+
     //if a # is added to an existing user, new number replaces old
     if (persons.some((person) => person.name === newName)) {
       const person = persons.find(pers => pers.name === newName);
@@ -60,18 +57,24 @@ const App = () => {
           `${newName} is already added to phonebook, replace the old number with a new one?`
         )
       ) {
-        personService.update(person.id,personObject).then((response) => {
+        const updatedPerson = {
+          ...person,
+          number: newNum
+        }
+        personService.update(person.id,updatedPerson).then((response) => {
           setPersons(persons.map(pers => pers.id !== response.id ? pers : response));
           
           setNotif(`${newName} successfully changed`);
           setTimeout(() => {
             setNotif(null);
           }, 5000);
-          setNewName("");
-          setNewNum("");
         });
       }
     } else {
+      const personObject = {
+        name: newName,
+        number: newNum,
+      };
       personService.create(personObject).then((response) => {
         setPersons(persons.concat(response.data));
         setNotif(`Added ${newName}`);
