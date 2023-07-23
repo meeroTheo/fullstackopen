@@ -1,5 +1,6 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 const Country = ({ country }) => {
   //{JSON.stringify(country.capital, null, 2)}
   const { name, capital, area, languages, flags } = country;
