@@ -9,15 +9,20 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, Courier New, monospace;
 }
 .notif {
-  background-color: #d3d3d3;
-  border-radius: 7px;
+  background: #d3d3d3;
+  border-radius: 5px;
   border-style: solid;
-  color: green;
   font-size: 20px;
-  margin: 15px;
+  margin-bottom: 10px;
   padding: 10px;
+}
+.success {
+  color: green;
+}
+.error {
+  color: red;
 }
 .container {
   margin-left: 10px;
 }
-/*# sourceMappingURL=main.2505ccf2.css.map*/
+/*# sourceMappingURL=main.0d40dbe5.css.map*/

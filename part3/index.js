@@ -1,4 +1,4 @@
-require('dotenv').config({path:'process.env'});
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -27,7 +27,7 @@ app.get("/api/persons", (req, res) => {
   });
 });
 //Add (post) someone to the database
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const body = req.body;
 
   const person = new Person({
@@ -36,10 +36,12 @@ app.post("/api/persons", (req, res) => {
   });
   person
     .save()
-    .then((savedPerson) => savedPerson.toJSON())
-    .then((perFormatted) => res.json(perFormatted));
+    .then((savedPerson) => {
+      res.json(savedPerson);
+    })
+    .catch((error) => next(error));
 });
-//getting info
+//INFO ROUTE
 app.get("/api/info", (req, res) => {
   const requestTime = new Date(Date.now());
   Person.find({}).then((persons) => {
@@ -49,10 +51,9 @@ app.get("/api/info", (req, res) => {
     );
   });
 });
-//getting single person
+//getting individual person
 app.get("/api/persons/:id", (req, res, next) => {
-  const id = req.params.id;
-  Person.findById(id)
+  Person.findById(req.params.id)
     .then((person) => {
       if (person) {
         res.json(person.toJSON());
@@ -72,16 +73,17 @@ app.delete("/api/persons/:id", (req, res, next) => {
 });
 //if a number exists for someone already in the phonebook, update the number
 app.put("/api/persons/:id", (request, response, next) => {
-  const body = request.body;
+  //const body = request.body;
+  const { name, number } = request.body;
 
-  const person = {
-    name: body.name,
-    number: body.number,
-  };
   //{new: true} checks the person object for whats the same and whats new
-  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+  Person.findByIdAndUpdate(
+    request.params.id,
+    { name, number },
+    { new: true, runValidators: true, context: "query" }
+  )
     .then((updatedNum) => {
-      response.json(updatedNum.toJSON());
+      response.json(updatedNum);
     })
     .catch((error) => next(error));
 });
@@ -96,12 +98,14 @@ const errorHandler = (error, request, response, next) => {
   console.error(error.message);
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
   }
   next(error);
 };
 app.use(errorHandler);
 //PORT and server running info
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT; //|| 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
